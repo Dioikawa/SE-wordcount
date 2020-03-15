@@ -104,7 +104,7 @@ int BlankLineCount(FILE *f)   //计算空白行
 	return blankline;
 }
 
-int CodeLineCount(FILE *f)
+int CodeLineCount(FILE *f)   //计算文件的代码行
 {
 	char c;
 	int codeline=0;       //代码行数
@@ -161,7 +161,7 @@ int main(int argc,char* argv[])         //在命令行中输入赋予参数具体的值
 		b=BlankLineCount(fp);
 		fp=fopen(argv[argc-1],"r");
 		c=CodeLineCount(fp);
-		printf("The number of commentline is %d.\n",a-b-c);
+		printf("The number of commentline is %d.\n",a-b-c);  //注释行=总行数-代码行-空白行
 	}
 	else printf("Please input the correrct parameter!\n");
 	return 0;
