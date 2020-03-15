@@ -2,7 +2,7 @@
 #include<stdlib.h>
 #include<string.h>
 
-void CharCount(FILE *f) //计算文件的字符数目 -c
+int CharCount(FILE *f) //计算文件的字符数目 -c
 {
 	char c;
 	int count=0;
@@ -14,9 +14,10 @@ void CharCount(FILE *f) //计算文件的字符数目 -c
 	}
 	fclose(f);
 	printf("The number of character is %d.\n",count);
+	return count;
 }
 
-void WordCount(FILE *f) //计算文件的词数目 -w
+int WordCount(FILE *f) //计算文件的词数目 -w
 {
 	char w;
 	int count=0;
@@ -36,9 +37,10 @@ void WordCount(FILE *f) //计算文件的词数目 -w
 	}
 	fclose(f);
 	printf("The number of word is %d.\n",count);
+	return count;
 }
 
-void LineCount(FILE *f)  //计算文件的行数目 -l
+int LineCount(FILE *f)  //计算文件的行数目 -l
 {
 	char l;
 	int count=0;
@@ -56,15 +58,20 @@ void LineCount(FILE *f)  //计算文件的行数目 -l
 	}
 	fclose(f);
 	printf("The number of line is %d.\n",count);
+	return count;
 }
 
-void BlankLineCount(FILE *f)   //计算空白行
+int BlankLineCount(FILE *f)   //计算空白行
 {
 	char b;
 	int blankline=0;     //统计空白行数
 	int chcount=0;       //统计字符个数
-	while(!feof(f))
+	fgetc(f);
+	if(!feof(f))       //判断是否是空白文件，若为空白文件则行数为0
 	{
+		rewind(f);
+		while(!feof(f))
+		{
 		b=fgetc(f);
 		if(0==chcount)
 		{
@@ -88,96 +95,55 @@ void BlankLineCount(FILE *f)   //计算空白行
 			if(b=='\n')
 				chcount=0;
 		}
+		}
+		if(chcount<=1)           //判断最后一行是否为空白行
+			blankline++;
 	}
-	if(chcount<=1)           //判断最后一行是否为空白行
-		blankline++;
 	fclose(f);
 	printf("The number of blankline is %d.\n",blankline);
+	return blankline;
 }
 
-void CodeLineCount(FILE *f)    //计算代码行
+int CodeLineCount(FILE *f)
 {
 	char c;
-	int chcount=0;
-	int codeline=0;
+	int codeline=0;       //代码行数
+	int chcount=0;        //字符数
 	while(!feof(f))
 	{
 		c=fgetc(f);
-		if(chcount<=1)
+		if(chcount==0)
+		{
+			if(c!='\n'&&c!=' '&&c!='\t')
+				chcount++;
+		}
+		else if(chcount==1)
 		{
 			if(c=='\n')
 				chcount=0;
-			else if(c!=' '&&c!='\t')
+			else if(c=='/')
 				chcount++;
-		}
-		else
-		{
-			if(c=='\n')
+			else if(c!=' '&&c!='\t')
 			{
 				codeline++;
-				chcount=0;
-			}
-		}
-	}
-	if(chcount<=1)           //判断最后一行是否为代码行
-		codeline++;
-	fclose(f);
-	printf("The number of codeline is %d.\n",codeline);
-}
-
-void CommentLineCount(FILE *f) //计算单行注释行的行数
-{
-	char c;
-	int chcount=0;       //字符数
-	int commentline=0;   //注释行数
-	int tag=0;           //tag为1表示该行为注释行，为0表示非注释行
-	int flag=0;          //flag为1表示出现'/'
-	while(!feof(f))
-	{
-		c=fgetc(f);
-		if(chcount<=1)
-		{
-			if(c=='\n')
-			{
-				if(tag==1)
-					commentline++;
-				tag=0;
-				flag=0;
-				chcount=0;
-			}
-			else if(c=='/')
-			{
-				if(flag==0)
-					flag=1;
-				else
-					tag=1;
-			}
-			else if(c!=' '&&c!='\t')
-			{
 				chcount++;
-				flag=0;
 			}
-			else flag=0;
 		}
 		else
 		{
 			if(c=='\n')
-			{
-				tag=0;
-				flag=0;
 				chcount=0;
-			}
 		}
 	}
-	if(tag==1)           //判断最后一行是否为注释行
-		commentline++;
 	fclose(f);
-	printf("The number of commentline is %d.\n",commentline);
+	printf("The number of codeline is %d.\n",codeline);
+	return codeline;
 }
 
 int main(int argc,char* argv[])         //在命令行中输入赋予参数具体的值
 {
 	FILE *fp;
+	int a,b,c;
 	if((fp=fopen(argv[argc-1],"r"))==NULL){
 		printf("Please input the correct filename!\n");
 		exit(0);
@@ -190,9 +156,12 @@ int main(int argc,char* argv[])         //在命令行中输入赋予参数具体的值
 		LineCount(fp);
 	else if(!strcmp(argv[1],"-a"))
 	{
-		CodeLineCount(fp);
-		BlankLineCount(fp);
-		CommentLineCount(fp);
+		a=LineCount(fp);
+		fp=fopen(argv[argc-1],"r");
+		b=BlankLineCount(fp);
+		fp=fopen(argv[argc-1],"r");
+		c=CodeLineCount(fp);
+		printf("The number of commentline is %d.\n",a-b-c);
 	}
 	else printf("Please input the correrct parameter!\n");
 	return 0;
